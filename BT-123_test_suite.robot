@@ -1,28 +1,31 @@
 *** Settings ***
 Resource    Preconditions.resource
+Library    DateTime
 Metadata
-    TicketID    1234
+    TicketID    BT-123
     TestLevel    Component
     Status    Ready
-    TestDescription    Verifies Airbag Disable based on CP Speed and Duration
-    Author    [Your Name]
-    LinkedRequirement    requirement_text
+    TestDescription    Power-saving mode for battery charge below 10%
+    Author    John Doe
+    LinkedRequirement    Requirement 1: Battery Power-Saving Mode
 
 *** Variables ***
-${CP_SPEED}    CP Speed
-${CP_SPEED_VALUE}    0
-${DURATION}    Duration
-${DURATION_VALUE}    300    # 5 minutes in seconds
-${AIRBAG_DISABLE}    Airbag_Disable
-${AIRBAG_DISABLE_VALUE}    1
+${BATTERY_CHARGE}    BatteryCharge
+${CHARGE_VALUE}    10***
+${POWER_SAVING_MODE}    PowerSavingMode
+${EXPECTED_STATE}    Enabled
 
 *** Test Cases ***
-CP_Speed_Duration_Airbag_Disable
-    [Tags]    Airbag_Test
+BT_123_Battery_PowerSaving_Mode
+    [Tags]    PowerSavingMode    Battery
     [Setup]    Testcase SetUp
-    Set Signal By Name    ${CP_SPEED}    Monitor Signal    ${DURATION}    ${DURATION_VALUE}
-    Check Signal By Name    ${AIRBAG_DISABLE}    ${AIRBAG_DISABLE_VALUE}
     [Teardown]    Testcase TearDown
+    # Initialize battery charge input
+    Set Signal By Name    ${BATTERY_CHARGE}    ${CHARGE_VALUE}
+    # Validate transition to power saving mode
+    Wait Signal Change    ${POWER_SAVING_MODE}    5
+    # Verify expected power saving mode state
+    Check Signal By Name    ${POWER_SAVING_MODE}    ${EXPECTED_STATE}
 
 *** Keywords ***
 Testcase SetUp
@@ -43,14 +46,8 @@ Check Signal By Name
     [Arguments]    ${SignalName}    ${ExpectedValue}
     Check Signal By Name    ${SignalName}    ${ExpectedValue}
 
-Monitor Signal
-    [Documentation]    Monitors a signal for specified duration (seconds)
-    [Arguments]    ${SignalName}    ${MonitorTime}
-    [Timeout]    ${MonitorTime + 10}    # Add buffer to timeout
-    Monitor Signal    ${SignalName}    ${MonitorTime}
-
 Wait Signal Change
-    [Documentation]    Waits for signal to change within timeout (seconds)
+    Waits for signal to change within timeout (seconds)
     [Arguments]    ${SignalName}    ${Timeout}
     Wait Signal Change    ${SignalName}    ${Timeout}
 
@@ -59,3 +56,8 @@ Get Signal By Name
     [Arguments]    ${SignalName}
     ${value} =    get_signal_by_name    ${SignalName}
     RETURN      ${value}
+Monitor Signal
+    [Documentation]    Monitors a signal for specified duration (seconds)
+    [Arguments]    ${SignalName}    ${MonitorTime}
+    [Timeout]    ${MonitorTime + 10}    # Add buffer to timeout
+    Monitor Signal    ${SignalName}    ${MonitorTime}

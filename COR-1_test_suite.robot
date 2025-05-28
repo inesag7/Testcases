@@ -1,28 +1,38 @@
 *** Settings ***
-Resource    Preconditions.resource
+Resource    Resource.robot
+Library    DateTime
 Metadata
-    TicketID    1234
-    TestLevel    Component
-    Status    Ready
-    TestDescription    Verifies Airbag Disable based on CP Speed and Duration
+    TicketID        COR-1
+    TestLevel    Acceptance
+    Ready
+    TestDescription    Correlate Lane_Position signal with Steering_Angle signal
     Author    [Your Name]
-    LinkedRequirement    requirement_text
+    LinkedRequirement    requirement_text:"Correlate Lane_Position signal with Steering_Angle signal."
 
 *** Variables ***
-${CP_SPEED}    CP Speed
-${CP_SPEED_VALUE}    0
-${DURATION}    Duration
-${DURATION_VALUE}    300    # 5 minutes in seconds
-${AIRBAG_DISABLE}    Airbag_Disable
-${AIRBAG_DISABLE_VALUE}    1
+${LANE_POSITION_SIGNAL}    Lane_Position
+${STEERING_ANGLE_SIGNAL}    Steering_Angle
+${CORRELATION_THRESHOLD}    10
+${MONITOR_TIME}    5
 
 *** Test Cases ***
-CP_Speed_Duration_Airbag_Disable
-    [Tags]    Airbag_Test
+COR_1_CorrelateLane_Position_With_Steering_Angle
     [Setup]    Testcase SetUp
-    Set Signal By Name    ${CP_SPEED}    Monitor Signal    ${DURATION}    ${DURATION_VALUE}
-    Check Signal By Name    ${AIRBAG_DISABLE}    ${AIRBAG_DISABLE_VALUE}
     [Teardown]    Testcase TearDown
+    [Tags]    correlation    lane_position    steering_angle
+
+    # Initialize Lane_Position signal
+    Set Signal By Name    ${LANE_POSITION_SIGNAL}    0
+
+    # Initialize Steering_Angle signal
+    Set Signal By Name    ${STEERING_ANGLE_SIGNAL}    0
+
+    # Monitor Lane_Position signal for 5 seconds
+    Monitor Signal    ${LANE_POSITION_SIGNAL}    ${MONITOR_TIME}
+
+    # Check Steering_Angle signal correlates with Lane_Position signal
+    ${steering_angle_value} =    Get Signal By Name    ${STEERING_ANGLE_SIGNAL}
+    Should Be True    ${steering_angle_value} > ${LANE_POSITION_SIGNAL} - ${CORRELATION_THRESHOLD} or ${steering_angle_value} < ${LANE_POSITION_SIGNAL} + ${CORRELATION_THRESHOLD}
 
 *** Keywords ***
 Testcase SetUp
@@ -58,4 +68,4 @@ Get Signal By Name
     [Documentation]    Retrieves current value of the specified signal
     [Arguments]    ${SignalName}
     ${value} =    get_signal_by_name    ${SignalName}
-    RETURN      ${value}
+    RETURN    ${value}
