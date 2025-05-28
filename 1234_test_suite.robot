@@ -1,29 +1,31 @@
 *** Settings ***
-Resource    Preconditions.resource
-Library    DateTime
-Metadata
-    TicketID    Brake_Pressure_Validation
-    TestLevel    Unit
-    Status    Ready
-    TestDescription    Validate Brake_Pressure signal against a redundant sensor.
-    Author    Automated Test Engineer
-    LinkedRequirement    requirement_text:Validate Brake_Pressure signal against a redundant sensor.
+Library           DateTime
+Resource          Preconditions.resource
+Metadata        TicketID         1234
+Metadata        TestLevel        Integration
+Metadata        Status          Ready
+Metadata        TestDescription  Correlate Lane_Position with Steering_Angle
+Metadata        Author          John
+Metadata        LinkedRequirement      Correlate Lane_Position_SIGNAL}     LanePosition
+Metadata        LinkedRequirement}      Correlate Lane_Position signal with Steering_Angle signal.
 
 *** Variables ***
-${BRAKE_PRESSURE_SIGNAL}    Brake_Pressure
-${REUNDANT_SENSOR_SIGNAL}    Redundant_Sensor_Signal
-${EXPECTED_SIGNAL_VALUE}    1.0
-${MONITOR_TIME}    5
-${TIMEOUT}    10
+${LANE_POSITION_SIGNAL}     LanePosition
+${STEERING_ANGLE_SIGNAL}    SteeringAngle
+${CORRELATED_STATE}         True
 
 *** Test Cases ***
-Brake_Pressure_Signal_Validation
-    [Tags]    Brake_Pressure_Signal    Redundant_Sensor
+1234_Correlate LanePosition With SteeringAngle
+    [Tags]    Integration    Correlation
     [Setup]    Testcase SetUp
-    Set Signal By Name    ${BRAKE_PRESSURE_SIGNAL    ${EXPECTED_SIGNAL_VALUE}
-    Monitor Signal    ${REUNDANT_SENSOR_SIGNAL}    ${MONITOR_TIME}
-    Check Signal By Name    ${REUNDANT_SENSOR_SIGNAL}    ${EXPECTED_SIGNAL_VALUE}
-    [Teardown]    Testcase TearDown
+    [Teardown]  Testcase TearDown
+
+    # Correlate Lane Position signal with Steering Angle signal
+    ${lane_position_signal_value} =    Get Signal By Name    ${LANE_POSITION_SIGNAL}
+    Set Signal By Name    ${STEERING_ANGLE_SIGNAL}    ${lane_position_signal_value}
+    Wait Signal Change    ${STEERING_ANGLE_SIGNAL}    5
+    Check Signal By Name    ${STEERING_ANGLE_SIGNAL}    ${lane_position_signal_value}
+    log    Lane Position correlated with Steering Angle successfully
 
 *** Keywords ***
 Testcase SetUp
