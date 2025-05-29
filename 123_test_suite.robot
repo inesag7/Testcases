@@ -1,30 +1,28 @@
 *** Settings ***
-Resource    resource.robot
+Resource    Preconditions.resource
 Library    DateTime
 Metadata
-    TicketID    123
-    TestLevel    Acceptance
-    Ready
-    TestDescription    Test Airbag Disable based on CP Speed and Duration
-    Author    Robot Framework User
-    LinkedRequirement    requirement_text:"Input: CP Speed = 0 AND Duration > 5m Output: Airbag_Disable = 1."
+TicketID    123
+TestLevel    Ready
+TestDescription    Validate Wheel Speed Signal
+Author    [Your Name]
+LinkedRequirement    requirement_text
 
 *** Variables ***
-${CP_SPEED_SIGNAL}    CP Speed
-${CP_SPEED_ZERO}    0
-${DURATION_SIGNAL}    Duration
-${DURATION_THRESHOLD}    5m
-${AIRBAG_DISABLE_SIGNAL}    Airbag_Disable
-${AIRBAG_DISABLE_STATE}    1
-${MONITOR_TIME}    10
+${WHEEL_SPEED_SIGNAL}    WheelSpeed
+${WHEEL_SPEED_VALID}    1
+${REUNDANT_SENSOR_SIGNAL}    RedundantSensor
+${REUNDANT_SENSOR_MATCH}    1
+${MONITOR_TIME}    5
 
 *** Test Cases ***
-requirement_123_Airbag Disable
-    [Tags]    Airbag Disable
+Validate Wheel Speed Against Redundant Sensor
+    [Tags]    wheel_speed    redundant_sensor
     [Setup]    Testcase SetUp
-    Set Signal By Name    ${CP_SPEED_SIGNAL}    ${CP_SPEED_ZERO}
-    Wait Signal Change    ${DURATION_SIGNAL}    ${DURATION_THRESHOLD}
-    Check Signal By Name    ${AIRBAG_DISABLE_SIGNAL    ${AIRBAG_DISABLE_STATE}
+    Set Signal By Name    ${WHEEL_SPEED_SIGNAL}    ${WHEEL_SPEED_VALID}
+    Monitor Signal    ${REUNDANT_SENSOR_SIGNAL    ${MONITOR_TIME}
+    ${redundant_sensor_value    Get Signal By Name    ${REUNDANT_SENSOR_SIGNAL}
+    Should Be Equal    ${redundant_sensor_value}    ${REUNDANT_SENSOR_MATCH}
     [Teardown]    Testcase TearDown
 
 *** Keywords ***

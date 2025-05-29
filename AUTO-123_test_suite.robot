@@ -1,29 +1,28 @@
 *** Settings ***
 Resource    Preconditions.resource
-Library    TicketID=1234    TestLevel=Acceptance    Status=Ready    TestDescription=Correlate Lane Position signal with Steering Angle signal.    Author=Test Engineer    LinkedRequirement=requirement_text: Correlate Lane_Position signal with Steering_Angle signal.
-
+Library    DateTime
+Metadata
+TicketID        AUTO-123
+TestLevel    Integration
+Status        Ready
+TestDescription    Airbag Disable based on CP Speed and Duration
+Author        test_automation
 *** Variables ***
-${LANE_POSITION_SIGNAL}    LanePositionSignal
-${STEERING_ANGLE_SIGNAL}    SteeringAngleSignal
-${EXPECTED_CORRELATION}    True
-
+${CP_SPEED}        CP Speed
+${CP_SPEED_VALUE}    0
+${DURATION}        Duration
+${DURATION_VALUE}    5m
+${AIRBAG_DISABLE}    Airbag_Disable
+${AIRBAG_DISABLE_VALUE}    1
+${ TIMEOUT }    10
 *** Test Cases ***
-req1234_Correlate_Lane_Position_Steering_Angle
+AIRBAG_DISABLE_CP_SPEED_0
     [Setup]    Testcase SetUp
+    Set Signal By Name    ${CP_SPEED}    ${CP_SPEED_VALUE}
+    Set Signal By Name    ${DURATION}    ${DURATION_VALUE}
+    Wait Signal Change    ${AIRBAG_DISABLE}    ${TIMEOUT}
+    Check Signal By Name    ${AIRBAG_DISABLE}    ${AIRBAG_DISABLE_VALUE}
     [Teardown]    Testcase TearDown
-    [Tags]    Lane_Position    Steering_Angle    Correlation
-
-    # Setup Lane Position and Steering Angle signals
-    Set Signal By Name    ${LANE_POSITION_SIGNAL}    ${EXPECTED_CORRELATION}
-    Set Signal By Name    ${STEERING_ANGLE_SIGNAL}    ${EXPECTED_CORRELATION}
-
-    # Verify correlation between Lane Position and Steering Angle signals
-    Check Signal By Name    ${LANE_POSITION_SIGNAL}    ${EXPECTED_CORRELATION}
-    Check Signal By Name    ${STEERING_ANGLE_SIGNAL}    ${EXPECTED_CORRELATION}
-
-    # Monitor signals for 5 seconds to ensure correlation
-    Monitor Signal    ${LANE_POSITION_SIGNAL}    5
-    Monitor Signal    ${STEERING_ANGLE_SIGNAL}    5
 
 *** Keywords ***
 Testcase SetUp

@@ -1,45 +1,43 @@
 *** Settings ***
-Resource    Preconditions.resource
-Library    DateTime
+Library           DateTime
+Resource          Preconditions.resource
 Metadata
-    TicketID          ABS-001
-    TestLevel          Component
-    Status            Ready
-    TestDescription   Verify ABS State Machine Transitions
-    Author           Your Name
-    LinkedRequirement  State Machine for ABS: States - Idle, Monitoring, Activating}; Transitions - Idle -> Monitoring (when speed > 0), Monitoring -> Activating (when skid detected)
+TicketID         ABS-001
+TestLevel         Acceptance
+Status          Ready
+Author           TestAutomation
+LinkedRequirement    State Machine for ABS
 
 *** Variables ***
-${SPEED_SIGNAL}         VehicleSpeed
-${SKID_DETECTED_SIGNAL}    SkidDetected
-${ABS_STATE_SIGNAL}    ABSState
-${TRANSITION_TIMEOUT}    5
-${MONITOR_TIME}      10
-${EXPECTED_IDLE_STATE}   0
-${EXPECTED_MONITORING_STATE}    1
-${EXPECTED_ACTIVATING_STATE} 2
+${IDLE_STATE}         Idle
+${MONITORING_STATE}     Monitoring
+${ACTIVATING_STATE}    Activating
+${SPEED_SIGNAL}       VehicleSpeed
+${SPEED_VALUE}       1
+${SKID_DETECTION_SIGNAL}   SkidDetected
+${SKID_DETECTION_VALUE}     1
+${EXPECTED_STATE}     ${ACTIVATING_STATE}
+${IDLE_TO_MONITORING_TRANSITION_TIMEOUT}    5
+${MONITORING_TO_ACTIVATING_TRANSITION_TIMEOUT}    10
 
 *** Test Cases ***
-ABS_State_Machine_Transitions
-    [Tags]    ABS    SkidDetection
+ABS_001_State_Machine_Transitions
+    [Tags]    ABS    StateMachine    Transitions
     [Setup]    Testcase SetUp
     [Teardown]    Testcase TearDown
 
-    # Start in idle state
-    ${initial_state} =    Get Signal By Name    ${ABS_STATE_SIGNAL}
-    Should Be Equal    ${initial_state}    ${EXPECTED_IDLE_STATE}
+    # Initialize system
+    Log    Initializing system...
 
-    # Transition to monitoring state when speed > 0
-    Set Signal By Name    ${SPEED_SIGNAL}    10
-    Wait Signal Change    ${ABS_STATE_SIGNAL}    ${TRANSITION_TIMEOUT}
-    ${monitoring_state} =    Get Signal By Name    ${ABS_STATE_SIGNAL}
-    Should Be Equal    ${monitoring_state}    ${EXPECTED_MONITORING_STATE}
+    # Start in Idle state
+    Set Signal By Name    ${SPEED_SIGNAL}    ${SPEED_VALUE}
+    Wait Signal Change    ${SPEED_SIGNAL}    ${IDLE_TO_MONITORING_TRANSITION_TIMEOUT}
+    Check Signal By Name    ${STATE_SIGNAL}    ${MONITORING_STATE}
 
-    # Transition to activating state when skid detected
-    Set Signal By Name    ${SKID_DETECTED_SIGNAL}    1
-    Wait Signal Change    ${ABS_STATE_SIGNAL}    ${TRANSITION_TIMEOUT}
-    ${activating_state} =    Get Signal By Name    ${ABS_STATE_SIGNAL}
-    Should Be Equal    ${activating_state}    ${EXPECTED_ACTIVATING_STATE}
+    # Transition to Activating state when skid detected
+    Set Signal By Name    ${SKID_DETECTION_SIGNAL}    ${SKID_DETECTION_VALUE}
+    Wait Signal Change    ${SKID_DETECTION_SIGNAL}    ${MONITORING_TO_ACTIVATING_TRANSITION_TIMEOUT}
+    Check Signal By Name    ${STATE_SIGNAL}    ${ACTIVATING_STATE}
 
 *** Keywords ***
 Testcase SetUp

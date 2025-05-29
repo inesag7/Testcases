@@ -1,35 +1,30 @@
 *** Settings ***
-Resource    Preconditions.resource
-Metadata    TicketID    BAT-001
-Metadata    TestLevel    System
-Metadata    Status    Ready
-Metadata    Author    Automation Team
-Metadata    TestDescription    Battery Power-Saving Mode
-Metadata    LinkedRequirement    The battery shall enter power-saving mode if the charge is below 10%.
+Documentation   Test suite for battery power-saving mode
+Resource   Preconditions.resource
+Library   DateTime
+
+Metadata
+TicketID         BAT-001
+TestLevel       Component
+Status         Ready
+TestDescription   Verify battery enters power-saving mode when charge is below 10%
+Author         Test Automation Engineer
+LinkedRequirement   The battery shall enter power-saving mode if the charge is below 10%
 
 *** Variables ***
-${CHARGE_SIGNAL}    BatteryChargeLevel
-${CHARGE_VALUE}    10
-${POWER_SAVING_MODE}    1
-${TIMEOUT}    5s
+${BATTERY_CHARGE_SIGNAL}     BatteryCharge
+${LOW_CHARGE_THRESHOLD}    10
+${POWER_SAVING_MODE_SIGNAL}     PowerSavingMode
+${EXPECTED_POWER_SAVING_MODE}    True
 
 *** Test Cases ***
-BAT_001_Power_Saving_Mode
+BAT_001_Enter_Power_Saving_Mode
+    [Tags]    Battery
     [Setup]    Testcase SetUp
+    Set Signal By Name    ${BATTERY_CHARGE_SIGNAL}    ${LOW_CHARGE_THRESHOLD - 1}
+    Wait Signal Change    ${POWER_SAVING_MODE_SIGNAL}    5
+    Check Signal By Name    ${POWER_SAVING_MODE_SIGNAL}    ${EXPECTED_POWER_SAVING_MODE}
     [Teardown]    Testcase TearDown
-    [Tags]    power-saving    battery
-
-    # Set initial charge level
-    Set Signal By Name    ${CHARGE_SIGNAL}    ${POWER_SAVING_MODE}
-
-    # Wait for power-saving mode
-    Wait Signal    ${CHARGE_SIGNAL}    ${TIMEOUT}
-
-    # Verify power-saving mode
-    Check Signal By Name    ${CHARGE_SIGNAL}    ${POWER_SAVING_MODE}
-
-    # Log result
-    Log    Battery entered power-saving mode
 
 *** Keywords ***
 Testcase SetUp
@@ -59,4 +54,9 @@ Get Signal By Name
     [Documentation]    Retrieves current value of the specified signal
     [Arguments]    ${SignalName}
     ${value} =    get_signal_by_name    ${SignalName}
-    RETURN    ${value}
+    RETURN      ${value}
+Monitor Signal
+    [Documentation]    Monitors a signal for specified duration (seconds)
+    [Arguments]    ${SignalName}    ${MonitorTime}
+    [Timeout]    ${MonitorTime + 10}    # Add buffer to timeout
+    Monitor Signal    ${SignalName}    ${MonitorTime}
